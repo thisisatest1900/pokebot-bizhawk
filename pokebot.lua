@@ -49,6 +49,7 @@ comm.mmfWrite("bizhawk_trainer_data-" .. bot_instance_id, string.rep("\x00", 409
 comm.mmfWrite("bizhawk_party_data-" .. bot_instance_id, string.rep("\x00", 8192))
 comm.mmfWrite("bizhawk_opponent_data-" .. bot_instance_id, string.rep("\x00", 4096))
 comm.mmfWrite("bizhawk_emu_data-" .. bot_instance_id, string.rep("\x00", 4096))
+comm.mmfWrite("bizhawk_menu_data-" .. bot_instance_id, string.rep("\x00", 4096))
 
 input_list = {}
 for i = 0, 100 do --101 entries, the final entry is for the index.
@@ -266,15 +267,24 @@ function getEmu()
 	return emu_data
 end
 
+function getMenu()
+	local menu_data = {
+		encounterCursor = Memory.readbyte(GameSettings.encounterCursor)
+	}
+	return menu_data
+end
+
 -- Main function to write data to memory mapped files
 function mainLoop()
 	trainer = getTrainer()
 	party = getParty()
 	opponent = readMonData(GameSettings.estats)
+	menu = getMenu()
 
 	comm.mmfWrite("bizhawk_trainer_data-" .. bot_instance_id, json.encode({["trainer"] = trainer}) .. "\x00")
 	comm.mmfWrite("bizhawk_party_data-" .. bot_instance_id, json.encode({["party"] = party}) .. "\x00")
 	comm.mmfWrite("bizhawk_opponent_data-" .. bot_instance_id, json.encode({["opponent"] = opponent}) .. "\x00")
+	comm.mmfWrite("bizhawk_menu_data-" .. bot_instance_id, json.encode({["menu"] = menu}) .. "\x00")
 
 	if write_files then
 		check_input = joypad.get()
@@ -296,6 +306,12 @@ function mainLoop()
 			)
 			opponent_data_file:write(json.encode({["opponent"] = opponent}))
 			opponent_data_file:close()
+
+			menu_data_file = io.open(
+				utils.translatePath("testing\\menu_data.json"), "w"
+			)
+			menu_data_file:write(json.encode({["menu"] = menu}))
+			menu_data_file:close()
 		end
 	end
 	

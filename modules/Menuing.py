@@ -10,6 +10,7 @@ from modules.Image import DetectTemplate
 from modules.Inputs import ButtonCombo, HoldButton, ReleaseAllInputs, ReleaseButton, PressButton, WaitFrames
 from modules.mmf.Pokemon import GetOpponent, GetParty, item_list
 from modules.mmf.Trainer import GetTrainer
+from modules.mmf.Menu import GetMenu
 
 log = logging.getLogger(__name__)
 config = GetConfig()
@@ -373,9 +374,9 @@ def FleeBattle():
     try:
         log.info("Running from battle...")
         while GetTrainer()["state"] != GameState.OVERWORLD:
-            while not DetectTemplate("battle/run.png") and GetTrainer()["state"] != GameState.OVERWORLD:
+            while GetMenu()["encounterCursor"] != 3 and GetTrainer()["state"] != GameState.OVERWORLD:
                 ButtonCombo(["Right", 5, "Down", "B", 5])
-            while DetectTemplate("battle/run.png") and GetTrainer()["state"] != GameState.OVERWORLD:
+            while GetMenu()["encounterCursor"] == 3 and GetTrainer()["state"] != GameState.OVERWORLD:
                 PressButton("A")
             PressButton("B")
         WaitFrames(30)  # Wait for battle fade animation

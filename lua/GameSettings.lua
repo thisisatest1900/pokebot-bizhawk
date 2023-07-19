@@ -17,7 +17,8 @@ GameSettings = {
 	language = 0,
 	trainerpointer = 0,
 	coords = 0,
-	roamerpokemonoffset = 0
+	roamerpokemonoffset = 0,
+	encounterCursor = 0
 }
 GameSettings.VERSIONS = {
 	RS = 1,
@@ -49,6 +50,7 @@ function GameSettings.initialize()
 	local mapid = 				{0x202E83C, 0x203732C, 	0x2036E10, 	0x202E59C, 	0x2036FCC, 	0x2036D44,	0x0,		0x203732C,	0x0 	} -- Map ID
 	local trainerpointer = 		{0x3001FB4, 0x3005D90, 	0x300500C, 	0x3001F28, 	0x3005AF0, 	0x300504C,	0x0,		0x3005D90,	0x0 	} -- Trainer data
 	local roamerpokemonoffset = {0x39D4, 	0x4188, 	0x4074, 	0x39D4, 	0x4188, 	0x4074,		0x39D4,		0x4188,		0x4074 	} -- Roamer Pokemon
+	local encounterCursor =     {0x2024E60, 0x20244AC,  0x2023FF8,  0x0,		0x2024150, 	0x2023F58,  0x0, 		0x20244AC,  0x2023FF8} -- gActionSelectionCursor 0=fight 1=bag 2=pokemon 3=run
 	
 	if gamecode == 0x41585645 then
 		GameSettings.game = 1
@@ -164,6 +166,7 @@ function GameSettings.initialize()
 		GameSettings.trainerpointer = trainerpointer[GameSettings.game]
 		GameSettings.coords = coords[GameSettings.game]
 		GameSettings.roamerpokemonoffset = roamerpokemonoffset[GameSettings.game]
+		GameSettings.encounterCursor = encounterCursor[GameSettings.game]
 	end
 	
 	if GameSettings.game % 3 == 1 then
