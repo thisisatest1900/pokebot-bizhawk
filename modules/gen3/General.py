@@ -8,6 +8,7 @@ from modules.Inputs import ButtonCombo, HoldButton, ReleaseButton, PressButton, 
 from modules.Menuing import StartMenu, IsValidMove
 from modules.Navigation import Bonk, FollowPath
 from modules.Stats import EncounterPokemon, OpponentChanged
+from modules.mmf.Fishing import GetFishing
 from modules.mmf.Pokemon import GetParty
 from modules.mmf.Trainer import GetTrainer
 
@@ -60,14 +61,23 @@ def ModeFishing():
     ButtonCombo(["Select", 50])  # Cast rod and wait for fishing animation
     # started_fishing = time.time()
     while not OpponentChanged():
-        if DetectTemplate("oh_a_bite.png") or DetectTemplate("on_the_hook.png"):
+        subTask = GetFishing()["subTask"]
+        if subTask == 7 : #Fishing_WaitForA
             PressButton("A")
-            while DetectTemplate("oh_a_bite.png"):
-                pass  # This keeps you from getting multiple A presses and failing the catch
-        if DetectTemplate("not_even_a_nibble.png") or DetectTemplate("it_got_away.png"): ButtonCombo(
-            ["B", 10, "Select"])
-        if not DetectTemplate("text_period.png"): ButtonCombo(
-            ["Select", 50])  # Re-cast rod if the fishing text prompt is not visible
+        if subTask == 10: #Fishing_StartEncounter
+            PressButton("B")
+        if subTask == -1 or subTask == 15: #Fishing_EndNoMon or no fishing task active
+            ButtonCombo(["B", 10, "Select"]) 
+            ButtonCombo(["Select", 50])  # Re-cast rod if the fishing text prompt is not visible
+    # while not OpponentChanged():
+    #     if DetectTemplate("oh_a_bite.png") or DetectTemplate("on_the_hook.png"):
+    #         PressButton("A")
+    #         while DetectTemplate("oh_a_bite.png"):
+    #             pass  # This keeps you from getting multiple A presses and failing the catch
+    #     if DetectTemplate("not_even_a_nibble.png") or DetectTemplate("it_got_away.png"): ButtonCombo(
+    #         ["B", 10, "Select"])
+    #     if not DetectTemplate("text_period.png"): ButtonCombo(
+    #         ["Select", 50])  # Re-cast rod if the fishing text prompt is not visible
 
     EncounterPokemon()
 

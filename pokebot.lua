@@ -50,6 +50,7 @@ comm.mmfWrite("bizhawk_party_data-" .. bot_instance_id, string.rep("\x00", 8192)
 comm.mmfWrite("bizhawk_opponent_data-" .. bot_instance_id, string.rep("\x00", 4096))
 comm.mmfWrite("bizhawk_emu_data-" .. bot_instance_id, string.rep("\x00", 4096))
 comm.mmfWrite("bizhawk_menu_data-" .. bot_instance_id, string.rep("\x00", 4096))
+comm.mmfWrite("bizhawk_fishing_data-" .. bot_instance_id, string.rep("\x00", 4096))
 
 input_list = {}
 for i = 0, 100 do --101 entries, the final entry is for the index.
@@ -274,17 +275,34 @@ function getMenu()
 	return menu_data
 end
 
+function getFishing()
+	local subTask = -1
+	for i = 0,GameSettings.totalTasks - 1 do --lua for are inclusive 
+		if(Memory.readdword(GameSettings.tasks + i * GameSettings.taskSize) == GameSettings.fishingTask
+			and Memory.readbyte(GameSettings.tasks + GameSettings.activeTaskOffset + i * GameSettings.taskSize) == 1) then
+				subTask = Memory.readword(GameSettings.tasks + GameSettings.subTaskOffset + i * GameSettings.taskSize)
+				break
+		end
+	end
+	local fishing_data = {
+		subTask = subTask
+	}
+	return fishing_data
+end
+
 -- Main function to write data to memory mapped files
 function mainLoop()
 	trainer = getTrainer()
 	party = getParty()
 	opponent = readMonData(GameSettings.estats)
 	menu = getMenu()
+	fishing_data = getFishing()
 
 	comm.mmfWrite("bizhawk_trainer_data-" .. bot_instance_id, json.encode({["trainer"] = trainer}) .. "\x00")
 	comm.mmfWrite("bizhawk_party_data-" .. bot_instance_id, json.encode({["party"] = party}) .. "\x00")
 	comm.mmfWrite("bizhawk_opponent_data-" .. bot_instance_id, json.encode({["opponent"] = opponent}) .. "\x00")
 	comm.mmfWrite("bizhawk_menu_data-" .. bot_instance_id, json.encode({["menu"] = menu}) .. "\x00")
+	comm.mmfWrite("bizhawk_fishing_data-" .. bot_instance_id, json.encode({["fishing"] = fishing_data}) .. "\x00")
 
 	if write_files then
 		check_input = joypad.get()
@@ -312,6 +330,12 @@ function mainLoop()
 			)
 			menu_data_file:write(json.encode({["menu"] = menu}))
 			menu_data_file:close()
+
+			fishing_data_file = io.open(
+				utils.translatePath("testing\\fishing_data.json"), "w"
+			)
+			fishing_data_file:write(json.encode({["fishing"] = fishing_data}))
+			fishing_data_file:close()
 		end
 	end
 	
