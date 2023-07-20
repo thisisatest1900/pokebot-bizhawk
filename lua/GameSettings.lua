@@ -27,9 +27,11 @@ GameSettings = {
 	fishingTask = 0 
 }
 GameSettings.VERSIONS = {
-	RS = 1,
-	E = 2,
-	FRLG = 3
+	R = 1,
+	S = 2,
+	E = 3,
+	FR = 4,
+	LG = 5
 }
 GameSettings.LANGUAGES = {
 	U = 1,
@@ -39,6 +41,35 @@ GameSettings.LANGUAGES = {
 	G = 5,
 	I = 6
 }
+
+-- ROM (08xxxxxx) addresses are not necessarily the same between different versions of a game, so set those individually
+-- they can change between game versions and game language so its necessasery to specifiy each address indevidualy
+function GameSettings.setRomAddresses()
+	-- When adding new non-english games, follow a similar formatting and edit the below format note accordingly
+	-- Format:
+	-- U = english J=Japanese F = French S = Spanish G = German I = Italian
+	-- the order of language is by the LANGUAGES oreder in GameSettings.LANGUAGES
+	-- Address = {
+	-- 		Ruby      { {U V1.0, U V1.1, U V1.2}, {J, J V1.1}, {F, F V1.1}, {S, S V1.1}, {G, G V1.1}, {I, I V1.1}},
+	-- 		Sapphire  { {U V1.0, U V1.1, U V1.2}, {J, J V1.1}, {F, F V1.1}, {S, S V1.1}, {G, G V1.1}, {I, I V1.1}}
+	-- 		Emerald   { {U V1.0, U V1.1, U V1.2}, {J, J V1.1}, {F, F V1.1}, {S, S V1.1}, {G, G V1.1}, {I, I V1.1}},
+	-- 		FireRed   { {U V1.0, U V1.1, U V1.2}, {J, J V1.1}, {F, F V1.1}, {S, S V1.1}, {G, G V1.1}, {I, I V1.1}},
+	-- 		LeafGreen { {U V1.0, U V1.1, U V1.2}, {J, J V1.1}, {F, F V1.1}, {S, S V1.1}, {G, G V1.1}, {I, I V1.1}},
+	-- }
+	local addresses = {
+		fishingTask = { --Task_Fishing + 1 address of the function in rom
+			{ {0X805A37D, 0X805A39D, 0X805A39D}, {0X80575C9, 0X80575C9}, {}, {0X805A7B9, 0X805A7B9}, {}, {}}, --ruby addresses
+			{ {0X805A381, 0X805A3A1, 0X805A3A1}, {0X80575CD, 0X80575CD}, {}, {0X805A7BD, 0X805A7BD}, {}, {}}, --sapphire addresses
+			{ {0x0808C8C1}, 					 {0X808C225}, 			 {}, {0X808C8D5},			 {}, {}}, --emerald addresses
+			{ {0X805D305, 0X805D319},			 {0X805CBC1, 0X805CB81}, {}, {0X805D3D9},			 {}, {}}, --fire red addresses
+			{ {0X805D305, 0X805D319},			 {0X805CBC1},			 {}, {0X805D3D9},			 {}, {} }, --leaf green addresses
+		}
+	}
+	local RomHeaderSoftwareVersion = 0x080000bc --RomHeaderSoftwareVersion from the symboletable
+	for key, address in pairs(addresses) do
+		GameSettings[key] = address[GameSettings.version][GameSettings.language][Memory.readbyte(RomHeaderSoftwareVersion) + 1]
+	end
+end
 
 function GameSettings.initialize()
 	local gamecode = memory.read_u32_be(0x0000AC, "ROM")
@@ -58,19 +89,18 @@ function GameSettings.initialize()
 	local roamerpokemonoffset = {0x39D4, 	0x4188, 	0x4074, 	0x39D4, 	0x4188, 	0x4074,		0x39D4,		0x4188,		0x4074 	} -- Roamer Pokemon
 	local encounterCursor =     {0x2024E60, 0x20244AC,  0x2023FF8,  0x0,		0x2024150, 	0x2023F58,  0x0, 		0x20244AC,  0x2023FF8} -- gActionSelectionCursor 0=fight 1=bag 2=pokemon 3=run
 	local tasks =               {0x3004B20, 0x3005E00,  0x3005090,  0x0,		0x3005B60,  0x30050D0,  0x0,  		0x3005E00,  0x0     }  --gtasks
-	local fishingTask = 		{0x805A39D, 0x0808C8C1, 0x0805D319, 0x0,		0x0,		0x0,		0x0,		0x0,		0x0     }  --Task_Fishing + 1 address of the function in rom
 
 	if gamecode == 0x41585645 then
 		GameSettings.game = 1
 		GameSettings.gamename = "Pokemon Ruby (U)"
 		GameSettings.encountertable = 0x839D454
-		GameSettings.version = GameSettings.VERSIONS.RS
+		GameSettings.version = GameSettings.VERSIONS.R
 		GameSettings.language = GameSettings.LANGUAGES.U
 	elseif gamecode == 0x41585045 then
 		GameSettings.game = 1
 		GameSettings.gamename = "Pokemon Sapphire (U)"
 		GameSettings.encountertable = 0x839D29C
-		GameSettings.version = GameSettings.VERSIONS.RS
+		GameSettings.version = GameSettings.VERSIONS.S
 		GameSettings.language = GameSettings.LANGUAGES.U
 	elseif gamecode == 0x42504545 then
 		GameSettings.game = 2
@@ -88,25 +118,25 @@ function GameSettings.initialize()
 		GameSettings.game = 3
 		GameSettings.gamename = "Pokemon FireRed (U)"
 		GameSettings.encountertable = 0x83C9CB8
-		GameSettings.version = GameSettings.VERSIONS.FRLG
+		GameSettings.version = GameSettings.VERSIONS.FR
 		GameSettings.language = GameSettings.LANGUAGES.U
 	elseif gamecode == 0x42504745 then
 		GameSettings.game = 3
 		GameSettings.gamename = "Pokemon LeafGreen (U)"
 		GameSettings.encountertable = 0x83C9AF4
-		GameSettings.version = GameSettings.VERSIONS.FRLG
+		GameSettings.version = GameSettings.VERSIONS.LG
 		GameSettings.language = GameSettings.LANGUAGES.U
 	elseif gamecode == 0x4158564A then
 		GameSettings.game = 4
 		GameSettings.gamename = "Pokemon Ruby (J)"
 		GameSettings.encountertable = 0x8379304
-		GameSettings.version = GameSettings.VERSIONS.RS
+		GameSettings.version = GameSettings.VERSIONS.R
 		GameSettings.language = GameSettings.LANGUAGES.J
 	elseif gamecode == 0x4158504A then
 		GameSettings.game = 4
 		GameSettings.gamename = "Pokemon Sapphire (J)"
 		GameSettings.encountertable = 0x83792FC
-		GameSettings.version = GameSettings.VERSIONS.RS
+		GameSettings.version = GameSettings.VERSIONS.S
 		GameSettings.language = GameSettings.LANGUAGES.J
 	elseif gamecode == 0x4250454A then
 		GameSettings.game = 5
@@ -118,25 +148,25 @@ function GameSettings.initialize()
 		GameSettings.game = 6
 		GameSettings.gamename = "Pokemon FireRed (J)"
 		GameSettings.encountertable = 0x8390B34
-		GameSettings.version = GameSettings.VERSIONS.FRLG
+		GameSettings.version = GameSettings.VERSIONS.FR
 		GameSettings.language = GameSettings.LANGUAGES.J
 	elseif gamecode == 0x4250474A then
 		GameSettings.game = 6
 		GameSettings.gamename = "Pokemon LeafGreen (J)"
 		GameSettings.encountertable = 0x83909A4
-		GameSettings.version = GameSettings.VERSIONS.FRLG
+		GameSettings.version = GameSettings.VERSIONS.LG
 		GameSettings.language = GameSettings.LANGUAGES.J
 	elseif gamecode == 0x41585653 then
 		GameSettings.game = 7
 		GameSettings.gamename = "Pokemon Ruby (S)"
 		GameSettings.encountertable = 0x0
-		GameSettings.version = GameSettings.VERSIONS.RS
+		GameSettings.version = GameSettings.VERSIONS.R
 		GameSettings.language = GameSettings.LANGUAGES.S
 	elseif gamecode == 0x41585053 then
 		GameSettings.game = 7
 		GameSettings.gamename = "Pokemon Sapphire (S)"
 		GameSettings.encountertable = 0x0
-		GameSettings.version = GameSettings.VERSIONS.RS
+		GameSettings.version = GameSettings.VERSIONS.S
 		GameSettings.language = GameSettings.LANGUAGES.S
 	elseif gamecode == 0x42504553 then
 		GameSettings.game = 8
@@ -148,13 +178,13 @@ function GameSettings.initialize()
 		GameSettings.game = 9
 		GameSettings.gamename = "Pokemon FireRed (S)"
 		GameSettings.encountertable = 0x0
-		GameSettings.version = GameSettings.VERSIONS.FRLG
+		GameSettings.version = GameSettings.VERSIONS.FR
 		GameSettings.language = GameSettings.LANGUAGES.S
 	elseif gamecode == 0x42504753 then
 		GameSettings.game = 9
 		GameSettings.gamename = "Pokemon LeafGreen (S)"
 		GameSettings.encountertable = 0x0
-		GameSettings.version = GameSettings.VERSIONS.FRLG
+		GameSettings.version = GameSettings.VERSIONS.LG
 		GameSettings.language = GameSettings.LANGUAGES.S
 	else
 		GameSettings.game = 0
@@ -176,7 +206,7 @@ function GameSettings.initialize()
 		GameSettings.roamerpokemonoffset = roamerpokemonoffset[GameSettings.game]
 		GameSettings.encounterCursor = encounterCursor[GameSettings.game]
 		GameSettings.tasks = tasks[GameSettings.game]
-		GameSettings.fishingTask = fishingTask[GameSettings.game]
+		GameSettings.setRomAddresses()
 	end
 	
 	if GameSettings.game % 3 == 1 then
