@@ -60,15 +60,18 @@ def ModeFishing():
     log.info(f"Fishing...")
     ButtonCombo(["Select", 50])  # Cast rod and wait for fishing animation
     # started_fishing = time.time()
+    once = True
     while not OpponentChanged():
         subTask = GetFishing()["subTask"]
-        if subTask == 7 : #Fishing_WaitForA
-            PressButton("A")
+        if subTask == 7 and once == True: #Fishing_WaitForA
+            ButtonCombo(["A",2])
+            once = False
         if subTask == 10: #Fishing_StartEncounter
             PressButton("B")
         if subTask == -1 or subTask == 15: #Fishing_EndNoMon or no fishing task active
             ButtonCombo(["B", 10, "Select"]) 
-            ButtonCombo(["Select", 50])  # Re-cast rod if the fishing text prompt is not visible
+            once = True
+              # Re-cast rod if the fishing text prompt is not visible
     # while not OpponentChanged():
     #     if DetectTemplate("oh_a_bite.png") or DetectTemplate("on_the_hook.png"):
     #         PressButton("A")
